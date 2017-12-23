@@ -40,21 +40,33 @@ CMD ["/usr/sbin/sshd", "-D"]
 # Docker
 RUN apt-get -q update \
     && DEBIAN_FRONTEND="noninteractive" apt-get -q install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends \
-        apt-transport-https \
-        ca-certificates \
-        curl \
-        software-properties-common \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    software-properties-common \
     && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - \
     && add-apt-repository -y "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
     && apt-get -q update \
     && DEBIAN_FRONTEND="noninteractive" apt-get -q install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends \
-        docker-ce \
+    docker-ce \
     && apt-get -q clean -y && rm -rf /var/lib/apt/lists/* && rm -f /var/cache/apt/*.bin \
     && usermod -aG docker jenkins
 
 # Git
 RUN apt-get -q update \
     && DEBIAN_FRONTEND="noninteractive" apt-get -q install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends \
-        git \
-        wget \
+    git \
+    wget \
     && apt-get -q clean -y && rm -rf /var/lib/apt/lists/* && rm -f /var/cache/apt/*.bin
+
+# Nodejs
+RUN set -xe \
+    && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add - \
+    && echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list \
+    && curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash - \
+    && DEBIAN_FRONTEND="noninteractive" apt-get -q install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends \
+    build-essential \
+    nodejs \
+    yarn \
+    && apt-get -q clean -y && rm -rf /var/lib/apt/lists/* && rm -f /var/cache/apt/*.bin
+
