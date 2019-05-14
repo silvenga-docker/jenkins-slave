@@ -1,45 +1,38 @@
-FROM ubuntu:trusty
-MAINTAINER Mark Lopez <m@silvenga.com>
+FROM ubuntu:bionic
+LABEL maintainer="Mark Lopez <m@silvenga.com>"
 
 # Base from https://github.com/evarga/docker-images
-
-# Add locales after locale-gen as needed
-# Upgrade packages on image
-# Preparations for sshd
-RUN locale-gen en_US.UTF-8 &&\
-    apt-get -q update &&\
-    DEBIAN_FRONTEND="noninteractive" apt-get -q upgrade -y -o Dpkg::Options::="--force-confnew" --no-install-recommends &&\
-    DEBIAN_FRONTEND="noninteractive" apt-get -q install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends openssh-server &&\
-    apt-get -q autoremove &&\
-    apt-get -q clean -y && rm -rf /var/lib/apt/lists/* && rm -f /var/cache/apt/*.bin &&\
-    sed -i 's|session    required     pam_loginuid.so|session    optional     pam_loginuid.so|g' /etc/pam.d/sshd &&\
-    mkdir -p /var/run/sshd
 
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
-# Install JDK 8 (latest edition)
-RUN apt-get -q update &&\
-    DEBIAN_FRONTEND="noninteractive" apt-get -q install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends software-properties-common &&\
-    add-apt-repository -y ppa:openjdk-r/ppa &&\
-    apt-get -q update &&\
-    DEBIAN_FRONTEND="noninteractive" apt-get -q install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends openjdk-8-jre-headless &&\
-    apt-get -q clean -y && rm -rf /var/lib/apt/lists/* && rm -f /var/cache/apt/*.bin
+RUN set -xe \
+    && apt-get -q update \
+    && DEBIAN_FRONTEND="noninteractive" apt-get install -y \
+    locales \
+    && locale-gen en_US.UTF-8 \
+    && DEBIAN_FRONTEND="noninteractive" apt-get -q upgrade -y \
+    && DEBIAN_FRONTEND="noninteractive" apt-get -q install -y \
+    openssh-server \
+    && apt-get -q autoremove \
+    && apt-get -q clean -y && rm -rf /var/lib/apt/lists/* && rm -f /var/cache/apt/*.bin \
+    && sed -i 's|session    required     pam_loginuid.so|session    optional     pam_loginuid.so|g' /etc/pam.d/sshd \
+    && mkdir -p /var/run/sshd \
+    && useradd -m -d /home/jenkins -s /bin/sh jenkins \
+    && echo "jenkins:jenkins" | chpasswd
 
-# Set user jenkins to the image
-RUN useradd -m -d /home/jenkins -s /bin/sh jenkins &&\
-    echo "jenkins:jenkins" | chpasswd
-
-# Standard SSH port
-EXPOSE 22
-
-# Default command
-CMD ["/usr/sbin/sshd", "-D"]
+RUN set -xe \
+    && apt-get -q update \
+    && DEBIAN_FRONTEND="noninteractive" apt-get -q install -y software-properties-common \
+    && add-apt-repository -y ppa:openjdk-r/ppa \
+    && DEBIAN_FRONTEND="noninteractive" apt-get -q install -y openjdk-8-jre-headless \
+    && apt-get -q clean -y && rm -rf /var/lib/apt/lists/* && rm -f /var/cache/apt/*.bin
 
 # Docker
-RUN apt-get -q update \
-    && DEBIAN_FRONTEND="noninteractive" apt-get -q install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends \
+RUN set -xe \
+    && apt-get -q update \
+    && DEBIAN_FRONTEND="noninteractive" apt-get -q install -y \
     apt-transport-https \
     ca-certificates \
     curl \
@@ -47,14 +40,13 @@ RUN apt-get -q update \
     && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - \
     && add-apt-repository -y "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
     && apt-get -q update \
-    && DEBIAN_FRONTEND="noninteractive" apt-get -q install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends \
     docker-ce \
     && apt-get -q clean -y && rm -rf /var/lib/apt/lists/* && rm -f /var/cache/apt/*.bin \
     && usermod -aG docker jenkins
 
 # Git
 RUN apt-get -q update \
-    && DEBIAN_FRONTEND="noninteractive" apt-get -q install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends \
+    && DEBIAN_FRONTEND="noninteractive" apt-get -q install -y \
     git \
     wget \
     && apt-get -q clean -y && rm -rf /var/lib/apt/lists/* && rm -f /var/cache/apt/*.bin
@@ -64,9 +56,35 @@ RUN set -xe \
     && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add - \
     && echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list \
     && curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash - \
-    && DEBIAN_FRONTEND="noninteractive" apt-get -q install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends \
+    && DEBIAN_FRONTEND="noninteractive" apt-get -q install -y \
     build-essential \
     nodejs \
     yarn \
     && apt-get -q clean -y && rm -rf /var/lib/apt/lists/* && rm -f /var/cache/apt/*.bin
 
+# pi-gen
+RUN apt-get -q update \
+    && DEBIAN_FRONTEND="noninteractive" apt-get -y install \
+    git \
+    vim \
+    parted \
+    quilt \
+    coreutils \
+    qemu-user-static \
+    debootstrap \
+    zerofree \
+    zip dosfstools \
+    bsdtar \
+    libcap2-bin \
+    rsync \
+    grep \
+    udev \
+    xz-utils \
+    curl \
+    xxd \
+    file \
+    kmod \
+    && apt-get -q clean -y && rm -rf /var/lib/apt/lists/* && rm -f /var/cache/apt/*.bin
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]
