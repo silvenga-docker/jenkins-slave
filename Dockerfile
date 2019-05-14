@@ -40,7 +40,7 @@ RUN set -xe \
     software-properties-common \
     && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - \
     && add-apt-repository -y "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
-    && apt-get -q update \
+    && DEBIAN_FRONTEND="noninteractive" apt-get -q install -y \
     docker-ce \
     && apt-get -q clean -y && rm -rf /var/lib/apt/lists/* && rm -f /var/cache/apt/*.bin \
     && usermod -aG docker jenkins
