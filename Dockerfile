@@ -56,7 +56,7 @@ RUN apt-get -q update \
 RUN set -xe \
     && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
     && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
-    && curl -sL https://deb.nodesource.com/setup_8.x | -E bash - \
+    && curl -sL https://deb.nodesource.com/setup_8.x | bash \
     && DEBIAN_FRONTEND="noninteractive" apt-get -q install -y \
     build-essential \
     nodejs \
