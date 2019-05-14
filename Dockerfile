@@ -15,6 +15,7 @@ RUN set -xe \
     && DEBIAN_FRONTEND="noninteractive" apt-get -q upgrade -y \
     && DEBIAN_FRONTEND="noninteractive" apt-get -q install -y \
     openssh-server \
+    sudo \
     && apt-get -q autoremove \
     && apt-get -q clean -y && rm -rf /var/lib/apt/lists/* && rm -f /var/cache/apt/*.bin \
     && sed -i 's|session    required     pam_loginuid.so|session    optional     pam_loginuid.so|g' /etc/pam.d/sshd \
@@ -37,7 +38,7 @@ RUN set -xe \
     ca-certificates \
     curl \
     software-properties-common \
-    && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - \
+    && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - \
     && add-apt-repository -y "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
     && apt-get -q update \
     docker-ce \
@@ -53,9 +54,9 @@ RUN apt-get -q update \
 
 # Nodejs
 RUN set -xe \
-    && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add - \
-    && echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list \
-    && curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash - \
+    && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
+    && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
+    && curl -sL https://deb.nodesource.com/setup_8.x | -E bash - \
     && DEBIAN_FRONTEND="noninteractive" apt-get -q install -y \
     build-essential \
     nodejs \
